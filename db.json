@@ -1,0 +1,23 @@
+{
+    "users": [],
+    "events": [
+        {
+            "id": 1,
+            "type": "Gaming",
+            "title": "Game Design Challenge",
+            "date": "29 November 2023",
+            "description": "Design and prototype a game in just 48 hours! Work in teams or solo to create something amazing.",
+            "spots": 20,
+            "registeredUsers": []
+        },
+        {
+            "id": 2,
+            "type": "Tech",
+            "title": "AI Workshop",
+            "date": "22 November 2023",
+            "description": "Learn the basics of artificial intelligence and machine learning in this hands-on workshop. No prior experience required!",
+            "spots": 15,
+            "registeredUsers": []
+        }
+    ]
+}

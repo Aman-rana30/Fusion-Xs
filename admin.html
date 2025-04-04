@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Fusion Club</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/4ddce4f42b.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="index.html">
+                <img src="logo.png" alt="Fusion Club Logo" class="logo">
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-btn secondary"><i class="fas fa-home"></i> Home</a>
+            <button id="logoutBtn" class="nav-btn primary"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+        
+        <div class="admin-section">
+            <h2><i class="fas fa-calendar-plus"></i> Create New Event</h2>
+            <form id="eventForm" class="admin-form">
+                <div class="form-group">
+                    <label for="eventTitle">Event Title</label>
+                    <input type="text" id="eventTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventType">Event Type</label>
+                    <select id="eventType" required>
+                        <option value="Gaming">Gaming</option>
+                        <option value="Tech">Tech</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="eventDate">Event Date</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventSpots">Available Spots</label>
+                    <input type="number" id="eventSpots" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventDescription">Description</label>
+                    <textarea id="eventDescription" required></textarea>
+                </div>
+                <button type="submit" class="admin-btn">Create Event <i class="fas fa-plus"></i></button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2><i class="fas fa-calendar-alt"></i> Manage Events</h2>
+            <div id="eventsList" class="events-management-grid">
+                <!-- Events will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is admin
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.userType !== 'admin') {
+            alert('Access denied. Admin privileges required.');
+            window.location.href = 'index.html';
+        }
+
+        // Load events
+        function loadEvents() {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const eventsContainer = document.getElementById('eventsList');
+            eventsContainer.innerHTML = '';
+
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-management-card';
+                eventCard.innerHTML = `
+                    <h3>${event.title}</h3>
+                    <p><i class="fas fa-calendar"></i> ${event.date}</p>
+                    <p><i class="fas fa-users"></i> ${event.spots} spots</p>
+                    <div class="event-actions">
+                        <button onclick="editEvent(${event.id})" class="admin-btn-small">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="deleteEvent(${event.id})" class="admin-btn-small danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                eventsContainer.appendChild(eventCard);
+            });
+        }
+
+        // Handle new event creation
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const newEvent = {
+                id: Date.now(),
+                title: document.getElementById('eventTitle').value,
+                type: document.getElementById('eventType').value,
+                date: document.getElementById('eventDate').value,
+                spots: parseInt(document.getElementById('eventSpots').value),
+                description: document.getElementById('eventDescription').value,
+                registeredUsers: []
+            };
+
+            events.push(newEvent);
+            localStorage.setItem('events', JSON.stringify(events));
+            
+            alert('Event created successfully!');
+            this.reset();
+            loadEvents();
+        });
+
+        // Delete event
+        function deleteEvent(eventId) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                const events = JSON.parse(localStorage.getItem('events') || '[]');
+                const updatedEvents = events.filter(event => event.id !== eventId);
+                localStorage.setItem('events', JSON.stringify(updatedEvents));
+                loadEvents();
+            }
+        }
+
+        // Edit event
+        function editEvent(eventId) {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const event = events.find(e => e.id === eventId);
+            
+            if (event) {
+                document.getElementById('eventTitle').value = event.title;
+                document.getElementById('eventType').value = event.type;
+                document.getElementById('eventDate').value = event.date;
+                document.getElementById('eventSpots').value = event.spots;
+                document.getElementById('eventDescription').value = event.description;
+                
+                // Change form submission to update instead of create
+                const form = document.getElementById('eventForm');
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    event.title = document.getElementById('eventTitle').value;
+                    event.type = document.getElementById('eventType').value;
+                    event.date = document.getElementById('eventDate').value;
+                    event.spots = parseInt(document.getElementById('eventSpots').value);
+                    event.description = document.getElementById('eventDescription').value;
+                    
+                    localStorage.setItem('events', JSON.stringify(events));
+                    alert('Event updated successfully!');
+                    form.reset();
+                    form.onsubmit = null; // Reset form handler
+                    loadEvents();
+                };
+            }
+        }
+
+        // Handle logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+
+        // Load events on page load
+        loadEvents();
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion Club</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/4ddce4f42b.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="logo.png" alt="Fusion Club Logo" class="logo">
+        </div>
+        <div class="nav-links" id="navLinks">
+            <a href="#" class="nav-btn secondary"><i class="fas fa-home"></i> Home</a>
+            <a href="#events" class="nav-btn secondary"><i class="fas fa-calendar-alt"></i> Events</a>
+            <div id="authButtons">
+                <a href="login.html" class="nav-btn secondary"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="signup.html" class="nav-btn primary"><i class="fas fa-user-plus"></i> Sign Up</a>
+            </div>
+            <div id="userButtons" style="display: none;">
+                <a href="admin.html" id="adminLink" class="nav-btn secondary" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a>
+                <button id="logoutBtn" class="nav-btn primary"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+        <button class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <span class="welcome-tag"><i class="fas fa-robot"></i> Welcome</span>
+            <h1 class="hero-title">The Fusion Club</h1>
+            <p class="hero-subtitle">Where innovation, creativity, and technology come together to build the future!</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <i class="fas fa-users"></i>
+                    <span class="stat-number">500+</span>
+                    <span class="stat-label">Members</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-laptop-code"></i>
+                    <span class="stat-number">50+</span>
+                    <span class="stat-label">Events</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-trophy"></i>
+                    <span class="stat-number">20+</span>
+                    <span class="stat-label">Awards</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="glow-effect"></div>
+            <img src="skull.png" alt="Skull" class="skull-image">
+        </div>
+    </section>
+
+    <section id="events" class="events-section">
+        <h2 class="section-title"><i class="fas fa-compass"></i> Explore Events</h2>
+        <div class="category-filter">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="gaming"><i class="fas fa-gamepad"></i> Gaming</button>
+            <button class="filter-btn" data-filter="tech"><i class="fas fa-microchip"></i> Tech</button>
+        </div>
+        <div class="events-grid">
+            <!-- Events will be loaded dynamically -->
+
+        </div>
+    </section>
+
+    <script>
+        // Check authentication status
+        function checkAuth() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const authButtons = document.getElementById('authButtons');
+            const userButtons = document.getElementById('userButtons');
+            const adminLink = document.getElementById('adminLink');
+
+            if (currentUser) {
+                authButtons.style.display = 'none';
+                userButtons.style.display = 'flex';
+                if (currentUser.userType === 'admin') {
+                    adminLink.style.display = 'inline-flex';
+                }
+            } else {
+                authButtons.style.display = 'flex';
+                userButtons.style.display = 'none';
+            }
+        }
+
+        // Load events
+        function loadEvents() {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const eventsGrid = document.querySelector('.events-grid');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            eventsGrid.innerHTML = events.map(event => `
+                <div class="event-card" data-category="${event.type.toLowerCase()}">
+                    <div class="event-card-inner">
+                        <span class="event-type">${event.type}</span>
+                        <h3 class="event-title">${event.title}</h3>
+                        <p class="event-date">${event.date}</p>
+                        <p class="event-description">${event.description}</p>
+                        <span class="tag">${event.type}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Register for event
+        function registerForEvent(eventId) {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const event = events.find(e => e.id === eventId);
+
+            if (event) {
+                if (!event.registeredUsers) {
+                    event.registeredUsers = [];
+                }
+
+                if (event.registeredUsers.includes(currentUser.email)) {
+                    alert('You are already registered for this event!');
+                    return;
+                }
+
+                if (event.registeredUsers.length >= event.spots) {
+                    alert('Sorry, this event is full!');
+                    return;
+                }
+
+                event.registeredUsers.push(currentUser.email);
+                localStorage.setItem('events', JSON.stringify(events));
+                alert('Successfully registered for the event!');
+                loadEvents();
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+        });
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            mobileMenuBtn.classList.toggle('active');
+        });
+
+        // Initialize
+        checkAuth();
+        loadEvents();
+
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        });
+
+        document.querySelectorAll('.section-title, .events-grid, .hero-stats').forEach((el) => observer.observe(el));
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Stats counter animation
+        const stats = document.querySelectorAll('.stat-number');
+        stats.forEach(stat => {
+            const target = parseInt(stat.textContent);
+            let current = 0;
+            const increment = target / 30;
+            const updateCount = () => {
+                if (current < target) {
+                    current += increment;
+                    stat.textContent = Math.ceil(current) + '+';
+                    requestAnimationFrame(updateCount);
+                }
+            };
+            updateCount();
+        });
+    </script>
+</body>
+</html>
